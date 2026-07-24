@@ -72,6 +72,15 @@ Swagger: Import > Link > `<url>/v3/api-docs`
 
 (resumo dos passos de deploy)
 
+## Consideracoes de seguranca e trade-offs
+
+As decisoes abaixo foram tomadas conscientemente devido ao prazo curto deste projeto de demonstracao (poucas horas), e nao por desconhecimento das praticas recomendadas de seguranca na AWS:
+
+- **Uso de `AdministratorAccess`**: o usuario IAM `taskflow-dev` recebeu a policy `AdministratorAccess` para agilizar o desenvolvimento. Em um ambiente de producao real, o correto seria aplicar o principio do menor privilegio, criando uma policy customizada com permissoes restritas apenas aos servicos necessarios (Elastic Beanstalk, RDS, S3, CloudWatch).
+- **Access Keys em vez de IAM Roles**: aplicacoes rodando na AWS (como o Elastic Beanstalk) idealmente nao deveriam usar Access Keys fixas para acessar outros servicos. O ideal e usar IAM Roles, que fornecem credenciais temporarias geradas automaticamente pela AWS, eliminando o risco de uma chave permanente ser vazada ou exposta.
+- **Access Keys de longo prazo para acesso humano**: as credenciais foram configuradas manualmente via `aws configure`. Para acesso humano em ambientes corporativos, o mais comum hoje e usar AWS IAM Identity Center (SSO) com credenciais temporarias.
+- **Autenticacao em pipelines de CI/CD**: caso este projeto evoluisse para um pipeline de CI/CD (ex: GitHub Actions), a pratica atual recomendada seria usar autenticacao federada via OIDC, eliminando a necessidade de armazenar qualquer credencial da AWS como secret.
+
 ## Autor
 
 Ariane Moura Barboza
