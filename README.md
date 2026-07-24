@@ -64,6 +64,20 @@ Acesse: http://localhost:8080/swagger-ui.html
 Importe o arquivo `postman_collection.json` ou importe direto via
 Swagger: Import > Link > `<url>/v3/api-docs`
 
+
+## Recursos AWS utilizados
+
+1. **IAM (Identity and Access Management)** — gerencia usuários e permissões de acesso aos serviços da AWS
+2. **Elastic Beanstalk** — orquestra o deploy da aplicação, provisionando EC2, Load Balancer e Auto Scaling automaticamente
+3. **EC2 (Elastic Compute Cloud)** — instância virtual onde a aplicação Spring Boot roda de fato
+4. **Application Load Balancer** — distribui as requisições recebidas entre as instâncias da aplicação
+5. **Auto Scaling Group** — ajusta automaticamente o número de instâncias conforme a demanda
+6. **Security Groups** — funcionam como firewall, controlando quem pode acessar cada recurso
+7. **RDS (Relational Database Service) - MySQL** — banco de dados relacional gerenciado, onde os dados das tarefas são persistidos
+8. **S3 (Simple Storage Service)** — armazena as versões do `.jar` da aplicação enviadas a cada deploy
+9. **CloudWatch** — coleta logs e métricas da aplicação em produção
+10. **CloudFormation** — gera e gerencia toda a infraestrutura acima de forma declarativa, por trás do Elastic Beanstalk
+
 ## Evidencias
 
 ### Swagger UI local
