@@ -31,7 +31,7 @@ IAM -> Elastic Beanstalk (EC2) -> RDS (MySQL) | CloudWatch | S3
 
 ## Tecnologias
 
-- Java 17
+- Java A
 - Spring Boot 4.0.7
 - Spring Data JPA
 - MySQL
@@ -66,11 +66,70 @@ Swagger: Import > Link > `<url>/v3/api-docs`
 
 ## Evidencias
 
+### Swagger UI local
+
+URL: http://localhost:8080/swagger-ui/index.html#/Tasks/getTaskById
+
 ![Swagger UI - TaskFlow API](evidencias/evidencias-swagger.png)
+
+### Swagger UI em produção AWS
+
+Interface interativa da API rodando no ambiente de produção AWS, expondo todos os endpoints do CRUD de tarefas:
+
+URL: http://taskflow-api-env-2.eba-zp3c23nh.us-east-1.elasticbeanstalk.com/swagger-ui/index.html
+
+![Swagger UI em produção](evidencias/evidencias_swagger_aws.png)
+
+### Infraestrutura real provisionada na AWS
+
+### Infraestrutura real provisionada na AWS
+
+Um dos aprendizados deste projeto foi entender o papel do **AWS CloudFormation** por trás do Elastic Beanstalk: embora o deploy pareça simples do ponto de vista do desenvolvedor (upload do .jar, alguns cliques), o Elastic Beanstalk na verdade gera e executa um template CloudFormation completo, provisionando e orquestrando cada recurso da infraestrutura — Auto Scaling Group, Application Load Balancer, Security Groups, EC2 Launch Template — de forma declarativa e versionada.
+
+O diagrama abaixo foi gerado automaticamente pelo AWS Infrastructure Composer a partir desse template. Diferente do diagrama de arquitetura apresentado anteriormente (que é conceitual, pensado por mim), este é extraído diretamente dos recursos que a AWS efetivamente provisionou — uma confirmação real, e não apenas teórica, de que a infraestrutura existe e está configurada como esperado:
+
+Esse contato com o CloudFormation reforçou um princípio central de Infrastructure as Code (IaC): infraestrutura provisionada por ferramentas gerenciadas (como o Elastic Beanstalk) não é uma "caixa preta" — pode e deve ser inspecionada, versionada e compreendida, assim como o próprio código da aplicação.
+
+
+![Diagrama de infraestrutura gerado pela AWS](evidencias/aws-infrastructure-diagram.png)
+
 
 ## Deploy na AWS
 
-(resumo dos passos de deploy)
+O deploy foi feito via **AWS Elastic Beanstalk**, plataforma gerenciada que orquestra a infraestrutura necessária para rodar a aplicação Spring Boot (EC2, Load Balancer, Auto Scaling, Security Groups) automaticamente.
+
+### Passos realizados
+
+1. **Configuração inicial da AWS CLI** — instalação via Homebrew e configuração com credenciais do usuário IAM `taskflow-dev`, criado especificamente para este projeto (`AdministratorAccess`, ver seção de trade-offs abaixo)
+
+2. **Provisionamento do banco de dados** — criação de uma instância RDS MySQL (`taskflow-db`, engine 8.4.9, classe `db.t4g.micro`, dentro do Free Tier), na região `us-east-1`
+
+3. **Build da aplicação** — geração do artefato `.jar` executável via Maven:
+```bash
+   ./mvnw clean package -DskipTests
+```
+
+4. **Criação do ambiente Elastic Beanstalk** — aplicação `taskflow-api`, plataforma Corretto 17 (64bit Amazon Linux 2023), com variáveis de ambiente configuradas para conexão com o RDS (`SPRING_DATASOURCE_URL`, `SPRING_DATASOURCE_USERNAME`, `SPRING_DATASOURCE_PASSWORD`, `SPRING_PROFILES_ACTIVE=prod`)
+
+5. **Upload e deploy do artefato** via console ou CLI (`create-application-version` + `update-environment`)
+
+### Troubleshooting em produção
+
+O primeiro deploy resultou em erro `502 Bad Gateway`. A investigação via logs (`eb-engine.log`, `web.stdout.log`) revelou dois problemas distintos, resolvidos em sequência:
+
+- **Conexão recusada com o RDS**: o Security Group do banco (`taskflow-db-sg`) só autorizava acesso a partir do meu IP local — faltava uma regra de entrada liberando o Security Group da instância EC2 do Elastic Beanstalk na porta 3306. Corrigido com:
+```bash
+  aws ec2 authorize-security-group-ingress --group-name taskflow-db-sg --protocol tcp --port 3306 --source-group <sg-da-instancia> --region us-east-1
+```
+
+- **502 mesmo com a aplicação saudável**: o nginx (proxy reverso do Elastic Beanstalk) esperava a aplicação respondendo na porta `5000` por padrão, enquanto o Spring Boot subia na porta `8080`. Corrigido definindo a variável de ambiente `SERVER_PORT=5000`, lida automaticamente pelo Spring Boot.
+
+Após essas correções, o ambiente ficou com Status `Ready` e Health `Green`, e o endpoint de verificação de saúde confirmou o funcionamento:
+
+```bash
+curl http://taskflow-api-env-2.eba-zp3c23nh.us-east-1.elasticbeanstalk.com/actuator/health
+# {"groups":["liveness","readiness"],"status":"UP"}
+```
 
 ## Consideracoes de seguranca e trade-offs
 
