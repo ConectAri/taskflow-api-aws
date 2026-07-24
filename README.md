@@ -111,6 +111,20 @@ Os endpoints funcionais podem ser conferidos via Swagger UI (seção acima) ou d
 
 
 
+
+### Teste de persistência: API → RDS em produção
+
+Para validar a integração completa entre a aplicação e o banco de dados em produção, foi criada uma tarefa de teste diretamente pelo Swagger UI (ambiente AWS), e em seguida consultado o banco de dados via **DataGrip** (ferramenta de administração de banco de dados da JetBrains), conectado diretamente à instância **Amazon RDS MySQL** (`taskflow-db`), banco `taskflow`.
+
+A query `SELECT * FROM task;` confirma que o registro criado pela API foi persistido corretamente no RDS, validando a conexão de ponta a ponta entre a aplicação Spring Boot (rodando no Elastic Beanstalk) e o banco de dados gerenciado na AWS:
+
+![Consulta ao banco RDS via DataGrip](evidencias/evidencias_rds_query.png)
+
+
+
+
+
+
 ## Deploy na AWS
 
 O deploy foi feito via **AWS Elastic Beanstalk**, plataforma gerenciada que orquestra a infraestrutura necessária para rodar a aplicação Spring Boot (EC2, Load Balancer, Auto Scaling, Security Groups) automaticamente.
@@ -170,6 +184,10 @@ A correção foi feita sem alterar uma linha de código: o Spring Boot lê autom
 
 
 ## Consideracoes de seguranca e trade-offs
+
+
+> **Nota: o que é trade-off?**  
+> Trade-off é uma decisão consciente de abrir mão de algo (geralmente segurança, performance ou boas práticas) em troca de outra vantagem mais relevante no momento (geralmente tempo ou simplicidade). As escolhas abaixo não foram feitas por desconhecimento, mas sim ponderando o prazo curto deste projeto de demonstração.
 
 As decisoes abaixo foram tomadas conscientemente devido ao prazo curto deste projeto de demonstracao (poucas horas), e nao por desconhecimento das praticas recomendadas de seguranca na AWS:
 
