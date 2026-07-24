@@ -15,13 +15,15 @@ Sobre o nome da API: "TaskFlow" é a junção de Task (tarefa) + Flow (fluxo) �
 
 ## Onde os principios SOLID foram aplicados
 
-| Principio | Onde foi aplicado |~~~~
+| Principio | Onde foi aplicado |
 |-----------|--------------------|
 | SRP (Single Responsibility Principle) | `TaskController`, `TaskServiceImpl` e `TaskRepositoryImpl`, cada um com uma unica responsabilidade (camada web, regra de negocio e persistencia, respectivamente) |
 | OCP (Open/Closed Principle) | Interface `TaskService`, que permite novas implementacoes sem alterar quem depende dela |
 | LSP (Liskov Substitution Principle) | `TaskRepositoryImpl` implementando `TaskRepository`, podendo substituir a abstracao sem quebrar o comportamento esperado |
 | ISP (Interface Segregation Principle) | Interfaces `TaskRepository` e `TaskService` separadas, cada uma com metodos coesos ao seu proposito |
 | DIP (Dependency Inversion Principle) | `TaskController` dependendo da abstracao `TaskService`, e nao de uma implementacao concreta |
+
+
 
 ## Arquitetura AWS
 
