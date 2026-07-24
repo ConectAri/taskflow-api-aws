@@ -15,6 +15,9 @@ Sobre o nome da API: "TaskFlow" é a junção de Task (tarefa) + Flow (fluxo) �
 
 ## Onde os principios SOLID foram aplicados
 
+> **Nota: o que são os princípios SOLID?**  
+> SOLID é um conjunto de 5 princípios de design orientado a objetos, criados para tornar o código mais fácil de entender, manter e evoluir sem quebrar o que já funciona. Aplicá-los reduz o acoplamento entre as partes do sistema — ou seja, mudanças em uma camada (como trocar o banco de dados) não exigem alterar as demais, tornando o projeto mais flexível a mudanças futuras.
+
 | Principio | Onde foi aplicado |
 |-----------|--------------------|
 | SRP (Single Responsibility Principle) | `TaskController`, `TaskServiceImpl` e `TaskRepositoryImpl`, cada um com uma unica responsabilidade (camada web, regra de negocio e persistencia, respectivamente) |
