@@ -94,6 +94,23 @@ Esse contato com o CloudFormation reforçou um princípio central de Infrastruct
 ![Diagrama de infraestrutura gerado pela AWS](evidencias/aws-infrastructure-diagram.png)
 
 
+### Comportamento esperado na raiz da aplicação
+
+
+A TaskFlow API é uma **API REST pura, sem interface visual (frontend)** — ou seja, ela não possui páginas HTML, telas ou uma "home page" para ser exibida no navegador. Toda a interação com a aplicação acontece através de chamadas HTTP diretas aos endpoints (`/api/tasks`) ou pela documentação interativa do Swagger.
+
+Por esse motivo, ao acessar a raiz do domínio (`/`) diretamente no navegador, o Spring Boot retorna uma página de erro 404 padrão — não existe nenhum controller mapeado para esse caminho, já que os endpoints reais ficam sob `/api/tasks`. Esse comportamento é esperado e confirma que a aplicação está no ar e respondendo corretamente, apenas sem uma rota configurada para `/`:
+
+Essa separação também reflete uma decisão consciente de arquitetura: a API foi desenhada seguindo o Single Responsibility Principle (SRP), concentrando-se exclusivamente na camada de negócio e persistência dos dados de tarefas. Não é responsabilidade do backend renderizar interfaces — essa seria a responsabilidade de um frontend separado (ex: React, Angular ou uma SPA consumindo esses mesmos endpoints), que poderia ser adicionado futuramente sem exigir qualquer alteração na API.
+
+URL: http://taskflow-api-env-2.eba-zp3c23nh.us-east-1.elasticbeanstalk.com/
+
+![Whitelabel Error Page na raiz](evidencias/evidencias_root_404.png)
+
+Os endpoints funcionais podem ser conferidos via Swagger UI (seção acima) ou diretamente em `/api/tasks`.
+
+
+
 ## Deploy na AWS
 
 O deploy foi feito via **AWS Elastic Beanstalk**, plataforma gerenciada que orquestra a infraestrutura necessária para rodar a aplicação Spring Boot (EC2, Load Balancer, Auto Scaling, Security Groups) automaticamente.
@@ -113,6 +130,9 @@ O deploy foi feito via **AWS Elastic Beanstalk**, plataforma gerenciada que orqu
 
 5. **Upload e deploy do artefato** via console ou CLI (`create-application-version` + `update-environment`)
 
+
+
+
 ### Troubleshooting em produção
 
 O primeiro deploy resultou em erro `502 Bad Gateway`. A investigação via logs (`eb-engine.log`, `web.stdout.log`) revelou dois problemas distintos, resolvidos em sequência:
@@ -130,6 +150,24 @@ Após essas correções, o ambiente ficou com Status `Ready` e Health `Green`, e
 curl http://taskflow-api-env-2.eba-zp3c23nh.us-east-1.elasticbeanstalk.com/actuator/health
 # {"groups":["liveness","readiness"],"status":"UP"}
 ```
+
+
+
+
+### Nota técnica: Spring Boot e a porta do Elastic Beanstalk
+
+<span style="color:red">Exemplo de como o Spring Boot é projetado para se adaptar a diferentes ambientes de execução através de configuração externa</span>
+
+Durante o deploy, foi identificado que o nginx (proxy reverso configurado pelo Elastic Beanstalk na plataforma Amazon Linux 2023) espera, por padrão, que a aplicação responda na porta `5000` — enquanto o Spring Boot, sem configuração explícita, sobe na porta `8080`. Essa divergência causava um erro `502 Bad Gateway` mesmo com a aplicação totalmente saudável e conectada ao banco.
+
+A correção foi feita sem alterar uma linha de código: o Spring Boot lê automaticamente a variável de ambiente `SERVER_PORT` (ou `PORT`, dependendo da versão) para definir a porta do Tomcat embutido. Bastou configurar `SERVER_PORT=5000` nas variáveis de ambiente do Elastic Beanstalk para resolver o conflito — um bom exemplo de como o Spring Boot é projetado para se adaptar a diferentes ambientes de execução através de configuração externa (12-Factor App), em vez de valores fixos no código.
+
+
+
+
+
+
+
 
 ## Consideracoes de seguranca e trade-offs
 
